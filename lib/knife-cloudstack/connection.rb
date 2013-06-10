@@ -28,6 +28,7 @@ require 'net/http'
 require 'json'
 require 'highline/import'
 require 'knife-cloudstack/string_to_regexp'
+require 'knife-cloudstack/string_is_uuid'
 
 module CloudstackClient
   class Connection
@@ -330,13 +331,14 @@ module CloudstackClient
 
       services = json['serviceoffering']
       return nil unless services
-
+     
       services.each { |s|
-        if s['name'] == name then
-          return s
+        if name.is_uuid? then
+          return s if s['id'] == name 
+        else
+          return s if s['name'] == name
         end
       }
-
       nil
     end
 
@@ -376,18 +378,15 @@ module CloudstackClient
       json = send_request(params)
 
       templates = json['template']
-      if !templates then
-        return nil
-      end
+      return nil unless templates
 
       templates.each { |t|
-        if t['name'] == name then
-          return t
-        elsif t['id'] == name then
-          return t
+        if name.is_uuid? then
+          return t if t['id'] == name 
+        else
+          return t if t['name'] == name
         end
       }
-
       nil
     end
 
@@ -422,12 +421,14 @@ module CloudstackClient
       json = send_request(params)
       projects = json['project']
       return nil unless projects
+  
       projects.each { |n|
-        if n['name'] == name then
-          return n
+        if name.is_uuid? then
+          return n if n['id'] == name 
+        else
+          return n if n['name'] == name
         end
-      }
-
+      } 
       nil
     end
 
@@ -461,11 +462,12 @@ module CloudstackClient
       return nil unless networks
 
       networks.each { |n|
-        if n['name'] == name then
-          return n
+        if name.is_uuid? then
+          return n if n['id'] == name 
+        else
+          return n if n['name'] == name
         end
       }
-
       nil
     end
 
@@ -521,11 +523,12 @@ module CloudstackClient
       return nil unless networks
 
       networks.each { |z|
-        if z['name'] == name then
-          return z
+        if name.is_uuid? then
+          return z if z['id'] == name 
+        else 
+          return z if z['name'] == name
         end
       }
-
       nil
     end
 
