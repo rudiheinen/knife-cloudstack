@@ -541,7 +541,8 @@ module CloudstackClient
 
       zones = json['zone']
       return nil unless zones
-      zones.sort! # sort zones so we always return the same zone
+      # zones.sort! # sort zones so we always return the same zone
+      # !this gives error in our production environment so need to retest this
       zones.first
     end
 
