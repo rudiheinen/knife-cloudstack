@@ -171,7 +171,7 @@ module CloudstackClient
         exit 1
       end
 
-      template = get_template(template_name)
+      template = get_template(template_name, zone_name)
       if !template then
         puts "Error: Template '#{template_name}' is invalid"
         exit 1
@@ -365,15 +365,19 @@ module CloudstackClient
     ##
     # Finds the template with the specified name.
 
-    def get_template(name)
+    def get_template(name, zone_name=nil)
 
       # TODO: use name parameter
       # listTemplates in CloudStack 2.2 doesn't seem to work
       # when the name parameter is specified. When this is fixed,
       # the name parameter should be added to the request.
+
+      zone = zone_name ? get_zone(zone_name) : get_default_zone 
+      
       params = {
           'command' => 'listTemplates',
           'templateFilter' => 'executable'
+          'zoneid' => zone['id'] if zone
       }
       json = send_request(params)
 
@@ -544,7 +548,7 @@ module CloudstackClient
 
       zones = json['zone']
       return nil unless zones
-
+      zones.sort! # sort zones so we always return the same zone
       zones.first
     end
 
