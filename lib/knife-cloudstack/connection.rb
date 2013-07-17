@@ -376,9 +376,10 @@ module CloudstackClient
       
       params = {
           'command' => 'listTemplates',
-          'templateFilter' => 'executable'
-          'zoneid' => zone['id'] if zone
+          'templateFilter' => 'executable',
       }
+      params['zoneid'] = zone['id'] if zone
+
       json = send_request(params)
 
       templates = json['template']
