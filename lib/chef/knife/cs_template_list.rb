@@ -35,6 +35,12 @@ module KnifeCloudstack
 
     banner "knife cs template list (options)"
 
+    option :cloudstack_zone,
+           :short => "-Z ZONE",
+           :long => "--zone ZONE",
+           :description => "The CloudStack zone for the server",
+           :proc => Proc.new { |z| Chef::Config[:knife][:cloudstack_zone] = z }
+
     option :listall,
            :long => "--listall",
            :description => "List all templates",
@@ -71,6 +77,20 @@ module KnifeCloudstack
       columns = object_list.count
       object_list = [] if locate_config_value(:noheader)
 
+      template = 'featured'
+      templatefilter = locate_config_value(:templatefilter).downcase
+      template = templatefilter if ["featured","self","self-executable","executable","community"].include?(templatefilter)
+      params = {}
+      params['templateFilter'] = template
+
+      if locate_config_value(:cloudstack_zone)
+        # see if we can find the zoneid for this zone and otherwise we take the default zone
+        zone = connection.get_zone(locate_config_value(:cloudstack_zone))
+        params['zoneid'] = zone['id'] if zone
+      end
+
+
+
       connection_result = connection.list_object(
         "listTemplates",
         "template",
@@ -78,7 +98,7 @@ module KnifeCloudstack
         locate_config_value(:listall),
         nil,
         nil,
-        locate_config_value(:templatefilter)
+        params
       )
 
       output_format(connection_result)
