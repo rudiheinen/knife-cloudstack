@@ -29,6 +29,7 @@ require 'json'
 require 'highline/import'
 require 'knife-cloudstack/string_to_regexp'
 require 'knife-cloudstack/string_is_uuid'
+require 'chef/rest/rest_request'
 
 module CloudstackClient
   class Connection
@@ -728,17 +729,20 @@ module CloudstackClient
       url = "#{@api_url}?#{data}&signature=#{signature}"
       Chef::Log.debug("URL: #{url}")
       uri = URI.parse(url)
-      http = Net::HTTP.new(uri.host, uri.port)
-      http.use_ssl = @use_ssl
-      http.verify_mode = OpenSSL::SSL::VERIFY_NONE
-      request = Net::HTTP::Get.new(uri.request_uri)
-      response = http.request(request)
+      req_body = Net::HTTP::Get.new(uri.request_uri)
+      request = Chef::REST::RESTRequest.new("GET", uri, req_body, headers={}) 
+      response = request.call
+      #http = Net::HTTP.new(uri.host, uri.port)
+      #http.use_ssl = @use_ssl
+      #http.verify_mode = OpenSSL::SSL::VERIFY_NONE
+      # request = Net::HTTP::Get.new(uri.request_uri)
+      # response = http.request(request)
 
       if !response.is_a?(Net::HTTPOK) then
         case response.code
         when "432"
           puts "\n" 
-          puts "Error #{response.code}: Your account does not have the right to execute this command or the command does not exist."
+          puts "Error #{response.code}: Your account does not have the right to execute this command is locked or the command does not exist."
         else
           puts "Error #{response.code}: #{response.message}"
           puts JSON.pretty_generate(JSON.parse(response.body))
